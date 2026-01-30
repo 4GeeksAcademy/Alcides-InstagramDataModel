@@ -1,8 +1,18 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, ForeignKey, Table, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 db = SQLAlchemy()
+
+
+follower_table = Table(
+    "follower",
+    db.Model.metadata,
+    Column("follower_id", ForeignKey("user.id")),
+    Column("followed_id", ForeignKey("user.id"))
+)
+
+
 
 class User(db.Model):
     __tablename__ = "user"
@@ -57,3 +67,7 @@ class Comment(db.Model):
             "comment_text": self.comment_text,
         }
 
+class Follow(db.Model):
+    __tablename__ = "follow"
+    follower_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    followed_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
