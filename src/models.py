@@ -8,8 +8,8 @@ db = SQLAlchemy()
 follower_table = Table(
     "follower",
     db.Model.metadata,
-    Column("follower_id", ForeignKey("user.id")),
-    Column("followed_id", ForeignKey("user.id"))
+    Column("follower_id", ForeignKey("user.id"), primary_key=True),
+    Column("followed_id", ForeignKey("user.id"), primary_key=True)
 )
 
 
@@ -29,7 +29,7 @@ class User(db.Model):
             "email": self.email,
             "first_name": self.first_name,
             "last_name": self.last_name,
-            # do not serialize the password, its a security breach
+            
         }
 
 class Post(db.Model):
