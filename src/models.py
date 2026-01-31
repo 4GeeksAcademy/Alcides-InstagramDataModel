@@ -57,6 +57,7 @@ class Post(db.Model):
     image: Mapped[str] = mapped_column(nullable=False)
     user: Mapped["User"] = relationship(back_populates="posts")
     comments: Mapped[list["Comment"]] = relationship(back_populates="post")
+    media: Mapped[list["Media"]] = relationship(back_populates="post")
 
     def serialize(self):
         return {
@@ -84,3 +85,19 @@ class Comment(db.Model):
             "post_id": self.post_id,
             "comment_text": self.comment_text,
         }
+
+class MediaType(db.Model):
+    __tablename__ = "mediatype"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    media: Mapped[list["Media"]] = relationship(back_populates="media_type")
+
+class Media(db.Model):
+    __tablename__ = "media"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("post.id"))
+    media_type_id: Mapped[int] = mapped_column(ForeignKey("mediatype.id"))
+    url: Mapped[str] = mapped_column(nullable=False)
+    post: Mapped["Post"] = relationship(back_populates="media")
+    media_type: Mapped["MediaType"] = relationship(back_populates="media")
