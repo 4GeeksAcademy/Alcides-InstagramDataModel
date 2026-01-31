@@ -13,15 +13,31 @@ follower_table = Table(
 )
 
 
-
 class User(db.Model):
     __tablename__ = "user"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     first_name: Mapped[str] = mapped_column(nullable=False)
     last_name: Mapped[str | None] = mapped_column(nullable=True)
-    post: Mapped[list["Post"]] = relationship(back_populates="user")
+    posts: Mapped[list["Post"]] = relationship(back_populates="user")
     comments: Mapped[list["Comment"]] = relationship(back_populates="author")
+
+    following: Mapped[list["User"]] = relationship(
+        "User",
+        secondary=follower_table,
+        primaryjoin=id == follower_table.c.follower_id,
+        secondaryjoin=id == follower_table.c.followed_id,
+        back_populates="followers"
+    )
+
+    followers: Mapped[list["User"]] = relationship(
+        "User",
+        secondary=follower_table,
+        primaryjoin=id == follower_table.c.followed_id,
+        secondaryjoin=id == follower_table.c.follower_id,
+        back_populates="following"
+    )
 
     def serialize(self):
         return {
@@ -29,16 +45,17 @@ class User(db.Model):
             "email": self.email,
             "first_name": self.first_name,
             "last_name": self.last_name,
-            
         }
+
 
 class Post(db.Model):
     __tablename__ = "post"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     caption: Mapped[str] = mapped_column(nullable=False)
     image: Mapped[str] = mapped_column(nullable=False)
-    user: Mapped["User"] = relationship(back_populates="post")
+    user: Mapped["User"] = relationship(back_populates="posts")
     comments: Mapped[list["Comment"]] = relationship(back_populates="post")
 
     def serialize(self):
@@ -52,9 +69,10 @@ class Post(db.Model):
 
 class Comment(db.Model):
     __tablename__ = "comment"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     author_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
-    post_id : Mapped[int] = mapped_column(ForeignKey("post.id"), nullable=False)
+    post_id: Mapped[int] = mapped_column(ForeignKey("post.id"), nullable=False)
     comment_text: Mapped[str] = mapped_column(nullable=False)
     author: Mapped["User"] = relationship(back_populates="comments")
     post: Mapped["Post"] = relationship(back_populates="comments")
@@ -66,8 +84,3 @@ class Comment(db.Model):
             "post_id": self.post_id,
             "comment_text": self.comment_text,
         }
-
-class Follow(db.Model):
-    __tablename__ = "follow"
-    follower_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    followed_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
